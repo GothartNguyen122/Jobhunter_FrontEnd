@@ -30,6 +30,7 @@ import ClientJobDetailPage from './pages/job/detail';
 import ClientCompanyPage from './pages/company';
 import ClientCompanyDetailPage from './pages/company/detail';
 import JobTabs from './pages/admin/job/job.tabs';
+import ChatWidget from './components/chatbox_ai/ChatWidget';
 
 const LayoutClient = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -161,6 +162,7 @@ export default function App() {
   return (
     <>
       <RouterProvider router={router} />
+      <ChatWidget />
     </>
   )
 }

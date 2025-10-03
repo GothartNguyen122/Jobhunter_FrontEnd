@@ -13,7 +13,7 @@ interface AccessTokenResponse {
  */
 
 const instance = axiosClient.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL as string,
+    baseURL: (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:8080',
     withCredentials: true
 });
 
@@ -23,8 +23,8 @@ const NO_RETRY_HEADER = 'x-no-retry';
 const handleRefreshToken = async (): Promise<string | null> => {
     return await mutex.runExclusive(async () => {
         const res = await instance.get<IBackendRes<AccessTokenResponse>>('/api/v1/auth/refresh');
-        if (res && res.data) return res.data.access_token;
-        else return null;
+        if (res && (res as any).access_token) return (res as any).access_token;
+        return null;
     });
 };
 

@@ -32,9 +32,11 @@ const LoginPage = () => {
             const res = await callLogin(username, password);
             setIsSubmit(false);
 
-            if (res?.data) {
-                localStorage.setItem('access_token', res.data.access_token);
-                dispatch(setUserLoginInfo(res.data.user));
+            if (res) {
+                const accessToken = (res as any).access_token ?? res?.data?.access_token;
+                const user = (res as any).data?.user ?? (res as any).user;
+                if (accessToken) localStorage.setItem('access_token', accessToken);
+                if (user) dispatch(setUserLoginInfo(user));
                 message.success('Đăng nhập tài khoản thành công!');
                 window.location.href = callback ? callback : '/';
             } else {

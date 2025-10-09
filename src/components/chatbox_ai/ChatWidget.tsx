@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChatBox, ChatButton } from './index';
 
 const ChatWidget: React.FC = () => {
@@ -7,6 +7,26 @@ const ChatWidget: React.FC = () => {
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
+
+  useEffect(() => {
+    const body = document.body;
+    if (isOpen) {
+      // Khóa scroll nền khi mở chatbox
+      body.style.overflow = 'hidden';
+      // Tránh nhảy layout trên iOS/Safari khi ẩn scrollbar
+      body.style.touchAction = 'none';
+    } else {
+      // Khôi phục scroll khi đóng chatbox
+      body.style.overflow = '';
+      body.style.touchAction = '';
+    }
+
+    return () => {
+      // Cleanup khi unmount
+      body.style.overflow = '';
+      body.style.touchAction = '';
+    }
+  }, [isOpen]);
 
   return (
     <>

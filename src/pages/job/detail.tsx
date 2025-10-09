@@ -4,7 +4,7 @@ import { IJob } from "@/types/backend";
 import { callFetchJobById } from "@/config/api";
 import styles from 'styles/client.module.scss';
 import parse from 'html-react-parser';
-import { Col, Divider, Row, Skeleton, Tag } from "antd";
+import { Col, Divider, Row, Skeleton, Tag, Progress, Button } from "antd";
 import { DollarOutlined, EnvironmentOutlined, HistoryOutlined, TrophyOutlined } from "@ant-design/icons";
 import { getLocationName } from "@/config/utils";
 import dayjs from 'dayjs';
@@ -78,6 +78,17 @@ const ClientJobDetailPage = (props: any) => {
         }, 500);
     };
 
+    // Tính toán % độ phù hợp đơn giản dựa trên một vài thuộc tính của job
+    const computeMatchPercent = (job?: IJob | null) => {
+        if (!job) return 50;
+        let percent = 50;
+        if (job.active) percent += 10;
+        if (job.level) percent += 10;
+        if (job.salary && job.salary > 0) percent += 10;
+        if (job.skills && job.skills.length > 0) percent += 10;
+        return Math.max(20, Math.min(95, percent));
+    };
+
     return (
         <div className={`${styles["container"]} ${styles["detail-job-section"]}`}>
             {isLoading ?
@@ -123,6 +134,32 @@ const ClientJobDetailPage = (props: any) => {
                                     >
                                         {jobDetail.active ? 'Ứng tuyển ngay' : 'Đã đóng tuyển dụng'}
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Độ phù hợp JD với Công việc */}
+                        <div className={styles["company-detail-section"]}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                                <h3 className={styles["company-detail-section-title"]} style={{ marginBottom: 0 }}>Độ phù hợp JD với Công việc</h3>
+                                {jobDetail?.id && jobDetail?.name && (
+                                    <Button
+                                        type="primary"
+                                        onClick={() => {
+                                            const name = encodeURIComponent(jobDetail.name);
+                                            window.location.href = `/cv-compare-job?name=${name}&id=${jobDetail.id}`;
+                                        }}
+                                    >
+                                        Xem chi tiết
+                                    </Button>
+                                )}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
+                                <div style={{ flex: 1 }}>
+                                    <Progress percent={computeMatchPercent(jobDetail)} status="active" showInfo={false} strokeColor={{ from: '#26d0ce', to: '#1a2980' }} />
+                                </div>
+                                <div style={{ minWidth: 64, textAlign: 'right', fontWeight: 600, color: '#1a2980' }}>
+                                    {computeMatchPercent(jobDetail)}%
                                 </div>
                             </div>
                         </div>

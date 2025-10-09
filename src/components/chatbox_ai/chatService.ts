@@ -14,6 +14,17 @@ export interface ChatResponse {
   timestamp: string;
 }
 
+export interface UserInfo {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: {
+    id?: string;
+    name?: string;
+    permissions?: any[];
+  };
+}
+
 class ChatService {
   private baseURL: string;
 
@@ -21,20 +32,46 @@ class ChatService {
     this.baseURL = baseURL;
   }
 
-  async sendMessage(message: string): Promise<ChatResponse> {
+  async sendMessage(message: string, userInfo?: UserInfo): Promise<ChatResponse> {
     try {
-      const response = await axios.post(`${this.baseURL}/api/chat`, {
+      const requestData = {
         message: message,
-        timestamp: new Date().toISOString()
-      });
+        timestamp: new Date().toISOString(),
+        user: userInfo ? {
+          id: userInfo.id,
+          name: userInfo.name,
+          email: userInfo.email,
+          role: userInfo.role?.name,
+          permissions: userInfo.role?.permissions
+        } : null
+      };
+      // Log cấu trúc request gửi đi
+      // Lưu ý: Chỉ log cho mục đích debug
+      // eslint-disable-next-line no-console
+      console.log('[ChatService] AI Request →', requestData);
+
+      const response = await axios.post(`${this.baseURL}/api/v1/AiServer`, requestData);
+
+      // Log cấu trúc response trả về từ AI Server (raw)
+      // eslint-disable-next-line no-console
+      console.log('[ChatService] AI Response ←', response?.data);
 
       return {
         message: response.data.message || response.data.response,
         timestamp: response.data.timestamp || new Date().toISOString()
       };
     } catch (error) {
-      console.error('Error sending message to AI server:', error);
+      // Log lỗi và response (nếu có) để dễ debug
+      // eslint-disable-next-line no-console
+      console.error('[ChatService] AI Error ✖', error);
+      // eslint-disable-next-line no-console
+      if ((error as any)?.response) console.error('[ChatService] AI Error Response ✖', (error as any).response?.data);
       
+      // Nếu không có response từ server (mất kết nối / server không chạy), ném lỗi đặc thù
+      // để UI có thể hiển thị thông báo "Không thể kết nối đến server"
+      if ((error as any)?.isAxiosError && !(error as any)?.response) {
+        throw new Error('AI_SERVER_UNREACHABLE');
+      }
       // Fallback response if AI server is not available
       return {
         message: this.getFallbackResponse(message),
@@ -75,7 +112,7 @@ class ChatService {
 
   async getChatHistory(): Promise<ChatMessage[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/api/chat/history`);
+      const response = await axios.get(`${this.baseURL}/api/v1/AiServer/history`);
       return response.data;
     } catch (error) {
       console.error('Error fetching chat history:', error);
@@ -85,7 +122,7 @@ class ChatService {
 
   async clearChatHistory(): Promise<void> {
     try {
-      await axios.delete(`${this.baseURL}/api/chat/history`);
+      await axios.delete(`${this.baseURL}/api/v1/AiServer/history`);
     } catch (error) {
       console.error('Error clearing chat history:', error);
     }

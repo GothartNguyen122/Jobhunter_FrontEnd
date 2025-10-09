@@ -2,12 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 import { SendOutlined, RobotOutlined, UserOutlined, CloseOutlined } from '@ant-design/icons';
 import styles from './ChatBox.module.scss';
 import chatService, { ChatMessage } from './chatService';
+import { useAppSelector } from '@/redux/hooks';
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  userInfo?: {
+    id?: string;
+    name?: string;
+    email?: string;
+    role?: string;
+  };
 }
 
 interface ChatBoxProps {
@@ -16,10 +23,22 @@ interface ChatBoxProps {
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
+  // Lấy thông tin user từ Redux store
+  const user = useAppSelector(state => state.account.user);
+  const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+  
+  // Tạo greeting message dựa trên thông tin user
+  const getGreetingMessage = () => {
+    if (isAuthenticated && user?.name) {
+      return `Xin chào ${user.name}! Tôi là AI Assistant của JobHunter. Tôi có thể giúp bạn tìm việc làm phù hợp, tư vấn về CV, hoặc trả lời các câu hỏi về nghề nghiệp. Bạn cần hỗ trợ gì?`;
+    }
+    return 'Xin chào! Tôi là AI Assistant của JobHunter. Tôi có thể giúp bạn tìm việc làm phù hợp, tư vấn về CV, hoặc trả lời các câu hỏi về nghề nghiệp. Bạn cần hỗ trợ gì?';
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Xin chào! Tôi là AI Assistant của JobHunter. Tôi có thể giúp bạn tìm việc làm phù hợp, tư vấn về CV, hoặc trả lời các câu hỏi về nghề nghiệp. Bạn cần hỗ trợ gì?',
+      text: getGreetingMessage(),
       sender: 'bot',
       timestamp: new Date()
     }
@@ -43,6 +62,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
+  // Cập nhật greeting message khi user thay đổi
+  useEffect(() => {
+    if (isOpen) {
+      const newGreeting = getGreetingMessage();
+      setMessages(prev => {
+        const updatedMessages = [...prev];
+        if (updatedMessages.length > 0 && updatedMessages[0].sender === 'bot') {
+          updatedMessages[0] = {
+            ...updatedMessages[0],
+            text: newGreeting
+          };
+        }
+        return updatedMessages;
+      });
+    }
+  }, [isOpen, user, isAuthenticated]);
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -50,7 +86,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      userInfo: isAuthenticated && user ? {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role?.name
+      } : undefined
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -59,8 +101,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
     setIsTyping(true);
 
     try {
-      // Call AI service
-      const response = await chatService.sendMessage(currentInput);
+      // Call AI service với thông tin user
+      const userInfo = isAuthenticated && user ? {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      } : undefined;
+      
+      const response = await chatService.sendMessage(currentInput, userInfo);
       
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -71,9 +120,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
       console.error('Error getting AI response:', error);
+      const cannotConnect = (error as any)?.message === 'AI_SERVER_UNREACHABLE';
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau.',
+        text: cannotConnect ? 'Không thể kết nối đến server.' : 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại sau.',
         sender: 'bot',
         timestamp: new Date()
       };
@@ -81,28 +131,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const generateBotResponse = (userInput: string): string => {
-    const lowerInput = userInput.toLowerCase();
-    
-    if (lowerInput.includes('việc làm') || lowerInput.includes('job') || lowerInput.includes('tuyển dụng')) {
-      return 'Tôi có thể giúp bạn tìm việc làm phù hợp! Bạn có thể tìm kiếm theo ngành nghề, địa điểm, hoặc mức lương mong muốn. Bạn quan tâm đến lĩnh vực nào?';
-    }
-    
-    if (lowerInput.includes('cv') || lowerInput.includes('resume') || lowerInput.includes('hồ sơ')) {
-      return 'Tôi có thể tư vấn về cách viết CV hiệu quả! Một CV tốt nên có: thông tin cá nhân rõ ràng, kinh nghiệm làm việc chi tiết, kỹ năng phù hợp, và thành tích nổi bật. Bạn muốn tư vấn về phần nào?';
-    }
-    
-    if (lowerInput.includes('kỹ năng') || lowerInput.includes('skill')) {
-      return 'Kỹ năng là yếu tố quan trọng trong tìm việc! Các kỹ năng phổ biến hiện nay bao gồm: lập trình, marketing, quản lý dự án, ngoại ngữ... Bạn có kỹ năng nào nổi bật?';
-    }
-    
-    if (lowerInput.includes('phỏng vấn') || lowerInput.includes('interview')) {
-      return 'Chuẩn bị phỏng vấn là bước quan trọng! Tôi khuyên bạn: nghiên cứu về công ty, chuẩn bị câu trả lời cho các câu hỏi thường gặp, ăn mặc phù hợp, và tự tin. Bạn có câu hỏi cụ thể nào về phỏng vấn?';
-    }
-    
-    return 'Cảm ơn bạn đã hỏi! Tôi là AI Assistant chuyên về tư vấn nghề nghiệp và tìm việc làm. Bạn có thể hỏi tôi về: tìm việc làm, viết CV, kỹ năng cần thiết, hoặc chuẩn bị phỏng vấn. Tôi có thể giúp gì thêm cho bạn?';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -151,6 +179,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isOpen, onClose }) => {
                 {message.sender === 'user' ? <UserOutlined /> : <RobotOutlined />}
               </div>
               <div className={styles.messageContent}>
+                {message.sender === 'user' && message.userInfo && (
+                  <div className={styles.userInfo}>
+                    <span className={styles.userName}>{message.userInfo.name}</span>
+                    {message.userInfo.role && (
+                      <span className={styles.userRole}>({message.userInfo.role})</span>
+                    )}
+                  </div>
+                )}
                 <div className={styles.messageText}>{message.text}</div>
                 <div className={styles.messageTime}>
                   {formatTime(message.timestamp)}

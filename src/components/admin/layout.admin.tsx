@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { isMobile } from 'react-device-detect';
 import type { MenuProps } from 'antd';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
+import { enableChatboxAdminAccess } from '@/components/share/admin-entry-guard';
 import { ALL_PERMISSIONS } from '@/config/permissions';
 
 const { Content, Sider } = Layout;
@@ -42,32 +43,32 @@ const LayoutAdmin = () => {
         
         if (permissions?.length || ACL_ENABLE === 'false' || isSuperAdmin) {
 
-            const viewCompany = isSuperAdmin || permissions?.find(item =>
+            const viewCompany = isSuperAdmin || permissions?.find((item: any) =>
                 item.apiPath === ALL_PERMISSIONS.COMPANIES.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.COMPANIES.GET_PAGINATE.method
             )
 
-            const viewUser = isSuperAdmin || permissions?.find(item =>
+            const viewUser = isSuperAdmin || permissions?.find((item: any) =>
                 item.apiPath === ALL_PERMISSIONS.USERS.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
             )
 
-            const viewJob = isSuperAdmin || permissions?.find(item =>
+            const viewJob = isSuperAdmin || permissions?.find((item: any) =>
                 item.apiPath === ALL_PERMISSIONS.JOBS.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.JOBS.GET_PAGINATE.method
             )
 
-            const viewResume = isSuperAdmin || permissions?.find(item =>
+            const viewResume = isSuperAdmin || permissions?.find((item: any) =>
                 item.apiPath === ALL_PERMISSIONS.RESUMES.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.RESUMES.GET_PAGINATE.method
             )
 
-            const viewRole = isSuperAdmin || permissions?.find(item =>
+            const viewRole = isSuperAdmin || permissions?.find((item: any) =>
                 item.apiPath === ALL_PERMISSIONS.ROLES.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.ROLES.GET_PAGINATE.method
             )
 
-            const viewPermission = isSuperAdmin || permissions?.find(item =>
+            const viewPermission = isSuperAdmin || permissions?.find((item: any) =>
                 item.apiPath === ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
             )
@@ -111,7 +112,11 @@ const LayoutAdmin = () => {
                     icon: <ExceptionOutlined />
                 }] : []),
 
-
+                ...(ACL_ENABLE === 'false' || isSuperAdmin ? [{
+                    label: <Link to='/admin/chatbox-admin'>Chatbox</Link>,
+                    key: '/admin/chatbox-admin',
+                    icon: <AliwangwangOutlined />
+                }] : [])
 
             ];
 
@@ -175,14 +180,25 @@ const LayoutAdmin = () => {
                             selectedKeys={[activeMenu]}
                             mode="inline"
                             items={menuItems}
-                            onClick={(e) => setActiveMenu(e.key)}
+                            onClick={(e) => {
+                                // Cho phép truy cập chatbox-admin khi người dùng click menu trong UI
+                                if (typeof e.key === 'string' && e.key.startsWith('/admin/chatbox-admin')) {
+                                    enableChatboxAdminAccess();
+                                }
+                                setActiveMenu(e.key)
+                            }}
                         />
                     </Sider>
                     :
                     <Menu
                         selectedKeys={[activeMenu]}
                         items={menuItems}
-                        onClick={(e) => setActiveMenu(e.key)}
+                        onClick={(e) => {
+                            if (typeof e.key === 'string' && e.key.startsWith('/admin/chatbox-admin')) {
+                                enableChatboxAdminAccess();
+                            }
+                            setActiveMenu(e.key)
+                        }}
                         mode="horizontal"
                     />
                 }

@@ -1,0 +1,283 @@
+.workspaceRoot {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  padding: 24px;
+}
+
+// Root tone for Chatbox Admin (matches widget gradient vibe)
+.chatboxAdminRoot {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // Theme tokens
+  --cb-bg-dark: #0b1220;
+  --cb-bg-darker: #0f172a;
+  --cb-border-dark: #1f2937;
+  --cb-text: #e5e7eb;
+  --cb-text-muted: #9ca3af;
+  --cb-primary-1: #667eea; // indigo
+  --cb-primary-2: #764ba2; // purple
+  --cb-accent: #22d3ee; // cyan accent
+}
+
+.siderDark {
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.headerBar {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.headerInner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+}
+
+.contentWrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.title {
+  margin: 0;
+  color: white;
+}
+
+.subtitle {
+  color: #94a3b8;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.darkCard {
+  background: var(--cb-bg-dark);
+  border-color: var(--cb-border-dark);
+  color: var(--cb-text);
+  border-width: 1px;
+  border-style: solid;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.darkCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(118,75,162,0.12));
+}
+
+.darkCard:hover {
+  transform: translateY(-2px);
+  transition: transform .2s ease, box-shadow .2s ease;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+}
+
+.darkCardHead {
+  background: #0b1220;
+  border-color: #1f2937;
+  color: #e5e7eb;
+}
+
+.statLabel {
+  color: #94a3b8;
+}
+
+.statValue {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.numberEmphasis {
+  color: var(--cb-accent);
+  font-weight: 700;
+}
+
+.emphasis {
+  background: linear-gradient(135deg, var(--cb-accent), var(--cb-primary-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.noData {
+  display: inline-block;
+  color: var(--cb-text-muted);
+  font-style: italic;
+  background: rgba(255,255,255,0.06);
+  border: 1px dashed var(--cb-border-dark);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.barChart {
+  height: 260px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.barTrack {
+  flex: 1;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.barFill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--cb-accent), var(--cb-primary-1));
+  border-radius: 4px;
+}
+
+.listTitle {
+  color: var(--cb-text);
+}
+
+.listDesc {
+  color: var(--cb-text-muted);
+}
+
+.sectionGap {
+  margin-top: 16px;
+}
+
+.pageRoot {
+  .pageTitle {
+    margin-bottom: 16px;
+    color: var(--cb-text);
+  }
+}
+
+// Ant Design component theming inside chatbox admin
+.chatboxAdminRoot {
+  // Buttons
+  :global(.ant-btn-primary) {
+    background: linear-gradient(135deg, var(--cb-primary-1), var(--cb-primary-2));
+    border: none;
+  }
+  :global(.ant-btn-primary:hover),
+  :global(.ant-btn-primary:focus) {
+    filter: brightness(1.05);
+    box-shadow: 0 8px 18px rgba(102, 126, 234, 0.35);
+  }
+
+  // Inputs
+  :global(.ant-input),
+  :global(.ant-input-affix-wrapper) {
+    background: var(--cb-bg-darker);
+    border-color: var(--cb-border-dark);
+    color: var(--cb-text);
+  }
+  :global(.ant-input::placeholder) {
+    color: var(--cb-text-muted);
+  }
+
+  // Menu (sider)
+  :global(.ant-menu-dark) {
+    background: transparent;
+  }
+  :global(.ant-menu-dark .ant-menu-item) {
+    border-left: 3px solid transparent;
+  }
+  :global(.ant-menu-dark .ant-menu-item:hover) {
+    background: rgba(255,255,255,0.06);
+  }
+  :global(.ant-menu-dark .ant-menu-item-selected) {
+    background: linear-gradient(135deg, rgba(102,126,234,0.25), rgba(118,75,162,0.25));
+    border-left-color: var(--cb-accent);
+  }
+
+  // Cards
+  :global(.ant-card-head) {
+    background: transparent;
+    border-bottom-color: var(--cb-border-dark);
+  }
+  :global(.ant-card-head-title) {
+    color: var(--cb-text);
+  }
+
+  // Table
+  :global(.ant-table) {
+    background: transparent;
+    color: var(--cb-text);
+  }
+  :global(.ant-table-thead > tr > th) {
+    background: var(--cb-bg-darker) !important;
+    color: var(--cb-text-muted);
+    border-bottom-color: var(--cb-border-dark);
+  }
+  :global(.ant-table-tbody > tr > td) {
+    border-bottom-color: var(--cb-border-dark);
+  }
+  :global(.ant-table-tbody > tr:hover > td) {
+    background: rgba(255,255,255,0.04) !important;
+  }
+
+  // Statistic numbers highlight
+  :global(.ant-statistic .ant-statistic-content-value) {
+    background: linear-gradient(135deg, var(--cb-accent), var(--cb-primary-1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  :global(.ant-statistic .ant-statistic-content-suffix) {
+    background: linear-gradient(135deg, var(--cb-accent), var(--cb-primary-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+  }
+  :global(.ant-statistic .ant-statistic-title) {
+    color: var(--cb-text-muted);
+  }
+}
+
+

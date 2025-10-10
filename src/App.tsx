@@ -10,6 +10,8 @@ import NotFound from 'components/share/not.found';
 import Loading from 'components/share/loading';
 import LoginPage from 'pages/auth/login';
 import RegisterPage from 'pages/auth/register';
+import GoogleAuthCallback from 'components/GoogleAuthCallback';
+ 
 import LayoutAdmin from 'components/admin/layout.admin';
 import ProtectedRoute from 'components/share/protected-route.ts';
 import Header from 'components/client/header.client';
@@ -30,15 +32,6 @@ import ClientJobDetailPage from './pages/job/detail';
 import ClientCompanyPage from './pages/company';
 import ClientCompanyDetailPage from './pages/company/detail';
 import JobTabs from './pages/admin/job/job.tabs';
-import ChatWidget from './components/chatbox_ai/ChatWidget';
-import CvCompareJobPage from './pages/cv_compare_job/cv_compare_job';
-import ChatboxAdminDashboard from './pages/chatbox_admin/dashboard';
-import ChatboxAdminConversations from './pages/chatbox_admin/conversations';
-import ChatboxAdminRag from './pages/chatbox_admin/rag';
-import ChatboxAdminChatboxes from './pages/chatbox_admin/chatboxes';
-// Workspace page has been merged into Dashboard
-import ChatboxAdminLayout from './pages/chatbox_admin/layout';
-import AdminEntryGuard from './components/share/admin-entry-guard';
 
 const LayoutClient = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -87,8 +80,7 @@ export default function App() {
         { path: "job", element: <ClientJobPage /> },
         { path: "job/:id", element: <ClientJobDetailPage /> },
         { path: "company", element: <ClientCompanyPage /> },
-        { path: "company/:id", element: <ClientCompanyDetailPage /> },
-        { path: "cv-compare-job", element: <CvCompareJobPage /> }
+        { path: "company/:id", element: <ClientCompanyDetailPage /> }
       ],
     },
 
@@ -152,22 +144,7 @@ export default function App() {
             <ProtectedRoute>
               <RolePage />
             </ProtectedRoute>
-        },
-        
-      ],
-    },
-
-    // Standalone Chatbox Admin (full-page layout, not nested under main Admin)
-    {
-      path: "/admin/chatbox-admin",
-      element: (<AdminEntryGuard><ProtectedRoute><ChatboxAdminLayout /></ProtectedRoute></AdminEntryGuard>),
-      errorElement: <NotFound />,
-      children: [
-        { index: true, element: <ChatboxAdminDashboard /> },
-        { path: "dashboard", element: <ChatboxAdminDashboard /> },
-        { path: "conversations", element: <ChatboxAdminConversations /> },
-        { path: "rag", element: <ChatboxAdminRag /> },
-        { path: "chatboxes", element: <ChatboxAdminChatboxes /> },
+        }
       ],
     },
 
@@ -181,12 +158,13 @@ export default function App() {
       path: "/register",
       element: <RegisterPage />,
     },
+
+    { path: "/auth/callback", element: <GoogleAuthCallback /> },
   ]);
 
   return (
     <>
       <RouterProvider router={router} />
-      <ChatWidget />
     </>
   )
 }

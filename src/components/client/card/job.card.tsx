@@ -25,7 +25,7 @@ const JobCard = (props: IProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [current, setCurrent] = useState(1);
-    const [pageSize, setPageSize] = useState(6);
+    const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
     const [filter, setFilter] = useState("");
     const [sortQuery, setSortQuery] = useState("sort=updatedAt,desc");
@@ -167,7 +167,7 @@ const JobCard = (props: IProps) => {
             <div className="job-list-anchor" />
             <div className={`${styles["job-content"]}`}>
                 <Spin spinning={isLoading} tip="Loading...">
-                    <Row gutter={[28, 28]}>
+                    <Row gutter={[32, 24]}>
                         <Col span={24}>
                             <div className='horizontal-line'></div>
                             
@@ -196,15 +196,15 @@ const JobCard = (props: IProps) => {
                         </Col>
 
                         {displayJob?.map(item => (
-                            <Col span={24} md={12} key={item.id}>
+                            <Col span={24} lg={12} key={item.id}>
                                 <Card
                                     size="small"
                                     title={null}
                                     hoverable
                                     className={styles["card-job-antd"]}
                                     onClick={() => handleViewDetailJob(item)}
-                                    bodyStyle={{ padding: 0, borderRadius: 16 }}
-                                    style={{ maxWidth: 500, margin: '0 auto', width: '100%', borderRadius: 16 }}
+                                    bodyStyle={{ padding: 0, borderRadius: 8 }}
+                                    style={{ maxWidth: '100%', margin: '0 auto', width: '100%', borderRadius: 8 }}
                                 >
                                     <div className={styles["card-job-content"]}>
                                         <div className={styles["card-job-left"]}>
@@ -219,34 +219,34 @@ const JobCard = (props: IProps) => {
                                             
                                             {/* Company name */}
                                             <div style={{ 
-                                                fontSize: '14px', 
+                                                fontSize: '12px', 
                                                 color: '#666', 
-                                                marginBottom: '8px',
+                                                marginBottom: '4px',
                                                 fontWeight: '500'
                                             }}>
                                                 {item.company?.name}
                                             </div>
                                             
                                             {/* Location and Salary */}
-                                            <div style={{ display: 'flex', gap: '16px', marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
                                             <div className={styles["job-location"]}>
-                                                <EnvironmentOutlined />&nbsp;{getLocationName(item.location)}
+                                                <EnvironmentOutlined /> {getLocationName(item.location)}
                                             </div>
                                             <div className={styles["job-salary"]}>
-                                                <ThunderboltOutlined />&nbsp;{(item.salary + "")?.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ
+                                                <ThunderboltOutlined /> {(item.salary + "")?.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ
                                             </div>
                                             </div>
                                             
                                             {/* Level */}
                                             {item.level && (
-                                                <div style={{ marginBottom: '8px' }}>
+                                                <div style={{ marginBottom: '4px' }}>
                                                     <Tag 
                                                         icon={<TrophyOutlined />}
                                                         color={getLevelColor(item.level)}
                                                         style={{ 
-                                                            borderRadius: '12px',
-                                                            padding: '2px 8px',
-                                                            fontSize: '12px',
+                                                            borderRadius: '6px',
+                                                            padding: '1px 4px',
+                                                            fontSize: '10px',
                                                             fontWeight: '500'
                                                         }}
                                                     >
@@ -257,25 +257,25 @@ const JobCard = (props: IProps) => {
                                             
                                             {/* Skills */}
                                             {item.skills && item.skills.length > 0 && (
-                                                <div style={{ marginBottom: '8px' }}>
+                                                <div style={{ marginBottom: '4px' }}>
                                                     <div style={{ 
                                                         display: 'flex', 
                                                         flexWrap: 'wrap', 
-                                                        gap: '4px',
+                                                        gap: '2px',
                                                         alignItems: 'center'
                                                     }}>
                                                         <CodeOutlined style={{ 
                                                             color: '#666', 
-                                                            fontSize: '12px',
-                                                            marginRight: '4px'
+                                                            fontSize: '10px',
+                                                            marginRight: '2px'
                                                         }} />
-                                                        {item.skills.slice(0, 3).map((skill, index) => (
+                                                        {item.skills.slice(0, 2).map((skill, index) => (
                                                             <Tag
                                                                 key={index}
                                                                 style={{
-                                                                    borderRadius: '8px',
-                                                                    padding: '1px 6px',
-                                                                    fontSize: '11px',
+                                                                    borderRadius: '4px',
+                                                                    padding: '1px 3px',
+                                                                    fontSize: '9px',
                                                                     backgroundColor: '#f0f0f0',
                                                                     color: '#666',
                                                                     border: 'none',
@@ -285,13 +285,13 @@ const JobCard = (props: IProps) => {
                                                                 {skill.name}
                                                             </Tag>
                                                         ))}
-                                                        {item.skills.length > 3 && (
+                                                        {item.skills.length > 2 && (
                                                             <span style={{ 
-                                                                fontSize: '11px', 
+                                                                fontSize: '9px', 
                                                                 color: '#999',
-                                                                marginLeft: '4px'
+                                                                marginLeft: '2px'
                                                             }}>
-                                                                +{item.skills.length - 3}
+                                                                +{item.skills.length - 2}
                                                             </span>
                                                         )}
                                                     </div>

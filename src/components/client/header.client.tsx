@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { CodeOutlined, ContactsOutlined, FireOutlined, LogoutOutlined, MenuFoldOutlined, RiseOutlined, TwitterOutlined, HomeOutlined } from '@ant-design/icons';
-import { Avatar, Drawer, Dropdown, MenuProps, Space, message } from 'antd';
+import { CodeOutlined, ContactsOutlined, FireOutlined, LogoutOutlined, MenuFoldOutlined, RiseOutlined, TwitterOutlined, HomeOutlined, DownOutlined, UserOutlined, FileTextOutlined, SearchOutlined } from '@ant-design/icons';
+import { Avatar, Drawer, Dropdown, MenuProps, Space, message, Button } from 'antd';
 import { Menu, ConfigProvider } from 'antd';
 import styles from '@/styles/client.module.scss';
 import { isMobile } from 'react-device-detect';
@@ -79,7 +79,7 @@ const Header = (props: any) => {
             key: 'manage-account',
             icon: <ContactsOutlined />
         },
-        ...(user.role?.permissions?.length || user.role?.name === 'ADMIN' || user.role?.name === 'SUPER_ADMIN'  ? [{
+        ...(user.role?.permissions?.length || user.role?.name === 'ADMIN' || user.role?.name === 'SUPER_ADMIN' ? [{
             label: <Link
                 to={"/admin"}
             >Trang Quản Trị</Link>,
@@ -97,7 +97,26 @@ const Header = (props: any) => {
         },
     ];
 
-    const itemsMobiles = [...items, ...itemsDropdown];
+    // Dropdown menu cho nhà tuyển dụng
+    const recruiterDropdownItems: MenuProps['items'] = [
+        {
+            label: <Link to="/login">Đăng nhập</Link>,
+            key: 'recruiter-login',
+            icon: <UserOutlined />
+        },
+        {
+            label: <Link to="/login">Đăng tin tuyển dụng</Link>,
+            key: 'recruiter-post-job',
+            icon: <FileTextOutlined />
+        },
+        {
+            label: <Link to="/login">Tìm ứng viên</Link>,
+            key: 'recruiter-find-candidate',
+            icon: <SearchOutlined />
+        },
+    ];
+
+    const itemsMobiles = [...items, ...recruiterDropdownItems, ...itemsDropdown];
 
     return (
         <>
@@ -150,16 +169,36 @@ const Header = (props: any) => {
                                     />
                                 </ConfigProvider>
                                 <div className={styles['extra']}>
-                                    {isAuthenticated === false ?
-                                        <Link to={'/login'}>Đăng Nhập</Link>
-                                        :
+                                    {isAuthenticated === false ? (
+                                        <Space>
+                                            <Dropdown 
+                                                menu={{ items: recruiterDropdownItems }} 
+                                                trigger={['hover']}
+                                                placement="bottomRight"
+                                            >
+                                                <Button 
+                                                    type="text" 
+                                                    style={{ 
+                                                        color: '#ffeaea',
+                                                        fontWeight: 600,
+                                                        fontSize: 16,
+                                                        height: 'auto',
+                                                        padding: '8px 16px'
+                                                    }}
+                                                >
+                                                    Dành cho nhà tuyển dụng <DownOutlined />
+                                                </Button>
+                                            </Dropdown>
+                                            <Link to={'/login'}>Đăng Nhập</Link>
+                                        </Space>
+                                    ) : (
                                         <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
                                             <Space style={{ cursor: "pointer" }}>
                                                 <span>Welcome {user?.name}</span>
                                                 <Avatar> {user?.name?.substring(0, 2)?.toUpperCase()} </Avatar>
                                             </Space>
                                         </Dropdown>
-                                    }
+                                    )}
 
                                 </div>
 

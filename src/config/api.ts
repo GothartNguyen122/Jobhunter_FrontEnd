@@ -1,5 +1,6 @@
 import { IBackendRes, ICompany, IAccount, IUser, IModelPaginate, IGetAccount, IJob, IResume, IPermission, IRole, ISkill, ISubscribers } from '@/types/backend';
 import axios from 'config/axios-customize';
+import aiAxios from 'config/axios-ai';
 
 /**
  *
@@ -255,5 +256,123 @@ export const callFetchSubscriber = (query: string) => {
 
 export const callFetchSubscriberById = (id: string) => {
     return axios.get<IBackendRes<ISubscribers>>(`/api/v1/subscribers/${id}`);
+}
+
+/**
+ * 
+Module Chatbox Management
+ */
+export const callFetchAllChatboxes = () => {
+    return aiAxios.get<IBackendRes<any[]>>('/api/v1/chatboxes');
+}
+
+export const callFetchChatboxById = (id: string) => {
+    return aiAxios.get<IBackendRes<any>>(`/api/v1/chatboxes/${id}`);
+}
+
+export const callCreateChatbox = (chatbox: any) => {
+    return aiAxios.post<IBackendRes<any>>('/api/v1/chatboxes', chatbox);
+}
+
+export const callUpdateChatbox = (id: string, chatbox: any) => {
+    return aiAxios.put<IBackendRes<any>>(`/api/v1/chatboxes/${id}`, chatbox);
+}
+
+export const callDeleteChatbox = (id: string) => {
+    return aiAxios.delete<IBackendRes<any>>(`/api/v1/chatboxes/${id}`);
+}
+
+export const callToggleChatbox = (id: string) => {
+    return aiAxios.patch<IBackendRes<any>>(`/api/v1/chatboxes/${id}/toggle`);
+}
+
+export const callGetChatboxStatus = (id: string) => {
+    return aiAxios.get<IBackendRes<any>>(`/api/v1/chatboxes/${id}/status`);
+}
+
+/**
+ * 
+Module Chat
+ */
+export const callSendMessage = (chatboxId: string, message: string, user?: any) => {
+    return aiAxios.post<IBackendRes<any>>(`/api/v1/chat/${chatboxId}/message`, {
+        message,
+        user
+    });
+}
+
+export const callGetChatHistory = (chatboxId: string) => {
+    return aiAxios.get<IBackendRes<any[]>>(`/api/v1/chat/${chatboxId}/history`);
+}
+
+export const callClearChatHistory = (chatboxId: string) => {
+    return aiAxios.delete<IBackendRes<any>>(`/api/v1/chat/${chatboxId}/history`);
+}
+
+/**
+ * 
+Module PDF Extractor
+ */
+export const callExtractPDF = (file: File, pageNumber?: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (pageNumber !== undefined) {
+        formData.append('pageNumber', pageNumber.toString());
+    }
+
+    return aiAxios.post<IBackendRes<any>>('/api/v1/pdf/extract', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+}
+
+export const callExtractMultiplePages = (file: File, maxPages?: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (maxPages !== undefined) {
+        formData.append('maxPages', maxPages.toString());
+    }
+
+    return aiAxios.post<IBackendRes<any>>('/api/v1/pdf/extract-multiple', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+}
+
+export const callGetPDFConfig = () => {
+    return aiAxios.get<IBackendRes<any>>('/api/v1/pdf/config');
+}
+
+/**
+ * 
+Module Health Check
+ */
+export const callHealthCheck = () => {
+    return aiAxios.get<IBackendRes<any>>('/api/v1/health');
+}
+
+export const callSystemStatus = () => {
+    return aiAxios.get<IBackendRes<any>>('/api/v1/health/status');
+}
+
+/**
+ * 
+Legacy Chat API (Backward Compatibility)
+ */
+export const callLegacyChat = (message: string, user?: any) => {
+    return aiAxios.post<IBackendRes<any>>('/api/v1/AiServer', {
+        message,
+        user
+    });
+}
+
+export const callLegacyChatHistory = () => {
+    return aiAxios.get<IBackendRes<any[]>>('/api/v1/AiServer/history');
+}
+
+export const callLegacyClearHistory = () => {
+    return aiAxios.delete<IBackendRes<any>>('/api/v1/AiServer/history');
 }
 

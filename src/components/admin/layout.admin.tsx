@@ -20,6 +20,7 @@ import { isMobile } from 'react-device-detect';
 import type { MenuProps } from 'antd';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
 import { ALL_PERMISSIONS } from '@/config/permissions';
+import { enableChatboxAdminAccess } from '@/components/share/admin-entry-guard';
 
 const { Content, Sider } = Layout;
 
@@ -110,7 +111,11 @@ const LayoutAdmin = () => {
                     key: '/admin/role',
                     icon: <ExceptionOutlined />
                 }] : []),
-
+                 ...(ACL_ENABLE === 'false' || isSuperAdmin ? [{
+                    label: <Link to='/admin/chatbox-admin'>Chatbox</Link>,
+                    key: '/admin/chatbox-admin',
+                    icon: <AliwangwangOutlined />
+                }] : [])
 
 
             ];
@@ -175,14 +180,25 @@ const LayoutAdmin = () => {
                             selectedKeys={[activeMenu]}
                             mode="inline"
                             items={menuItems}
-                            onClick={(e) => setActiveMenu(e.key)}
+                            onClick={(e) => {
+                                // Cho phép truy cập chatbox-admin khi người dùng click menu trong UI
+                                if (typeof e.key === 'string' && e.key.startsWith('/admin/chatbox-admin')) {
+                                    enableChatboxAdminAccess();
+                                }
+                                setActiveMenu(e.key)
+                            }}
                         />
                     </Sider>
                     :
                     <Menu
                         selectedKeys={[activeMenu]}
                         items={menuItems}
-                        onClick={(e) => setActiveMenu(e.key)}
+                        onClick={(e) => {
+                            if (typeof e.key === 'string' && e.key.startsWith('/admin/chatbox-admin')) {
+                                enableChatboxAdminAccess();
+                            }
+                            setActiveMenu(e.key)
+                        }}
                         mode="horizontal"
                     />
                 }

@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const AI_SERVER_URL = 'http://localhost:3001'; // URL của AI Server
+import { callSendMessage, callGetChatHistory, callClearChatHistory, callLegacyChat, callLegacyChatHistory, callLegacyClearHistory } from '@/config/api';
 
 export interface ChatMessage {
   id: string;
@@ -26,39 +24,107 @@ export interface UserInfo {
 }
 
 class ChatService {
-  private baseURL: string;
+  private chatboxId: string;
+  private useLegacyAPI: boolean;
 
-  constructor(baseURL: string = AI_SERVER_URL) {
-    this.baseURL = baseURL;
+  constructor(chatboxId: string = 'default', useLegacyAPI: boolean = false) {
+    this.chatboxId = chatboxId;
+    this.useLegacyAPI = useLegacyAPI;
   }
 
-  async sendMessage(message: string, userInfo?: UserInfo): Promise<ChatResponse> {
+  async sendMessage(userMessage: string, userInfo?: UserInfo): Promise<ChatResponse> {
     try {
-      const requestData = {
-        message: message,
-        timestamp: new Date().toISOString(),
-        user: userInfo ? {
-          id: userInfo.id,
-          name: userInfo.name,
-          email: userInfo.email,
-          role: userInfo.role?.name,
-          permissions: userInfo.role?.permissions
-        } : null
+      // Tạo dữ liệu user mẫu nếu không có thông tin user
+      const user = userInfo ? {
+        id: userInfo.id,
+        name: userInfo.name,
+        email: userInfo.email,
+        role: userInfo.role?.name,
+        permissions: userInfo.role?.permissions
+      } : {
+        id: 'guest_001',
+        name: 'Khách hàng',
+        email: 'guest@jobhunter.com',
+        role: 'user',
+        permissions: []
       };
-      // Log cấu trúc request gửi đi
-      // Lưu ý: Chỉ log cho mục đích debug
-      // eslint-disable-next-line no-console
-      console.log('[ChatService] AI Request →', requestData);
 
-      const response = await axios.post(`${this.baseURL}/api/v1/AiServer`, requestData);
+      // Thêm một số dữ liệu mẫu khác nhau để test
+      const sampleUsers = [
+        {
+          id: 'guest_001',
+          name: 'Khách hàng',
+          email: 'guest@jobhunter.com',
+          role: 'user',
+          permissions: []
+        },
+        {
+          id: 'demo_002',
+          name: 'Nguyễn Văn Demo',
+          email: 'demo@jobhunter.com',
+          role: 'candidate',
+          permissions: ['view_jobs', 'apply_jobs']
+        },
+        {
+          id: 'hr_003',
+          name: 'HR Manager',
+          email: 'hr@jobhunter.com',
+          role: 'hr',
+          permissions: ['view_candidates', 'manage_jobs', 'view_analytics']
+        }
+      ];
+
+      // Sử dụng dữ liệu mẫu ngẫu nhiên nếu không có userInfo
+      const randomUser = sampleUsers[Math.floor(Math.random() * sampleUsers.length)];
+      const finalUser = userInfo ? user : randomUser;
+
+      // Log thông tin user được gửi đi
+      console.log('[ChatService] User data being sent:', finalUser);
+
+      // Log cấu trúc request gửi đi
+      // eslint-disable-next-line no-console
+      console.log('[ChatService] AI Request →', { message: userMessage, user: finalUser, chatboxId: this.chatboxId });
+
+      let response;
+      
+      if (this.useLegacyAPI) {
+        // Use legacy API for backward compatibility
+        response = await callLegacyChat(userMessage, finalUser);
+      } else {
+        // Use new multi-chatbox API
+        response = await callSendMessage(this.chatboxId, userMessage, finalUser);
+      }
 
       // Log cấu trúc response trả về từ AI Server (raw)
       // eslint-disable-next-line no-console
       console.log('[ChatService] AI Response ←', response?.data);
 
+      // Kiểm tra cấu trúc response và xử lý an toàn
+      const responseData = response?.data;
+      let message = '';
+      let timestamp = new Date().toISOString();
+
+      if (responseData) {
+        // Thử các cấu trúc response khác nhau
+        if (responseData.data?.message) {
+          message = responseData.data.message;
+          timestamp = responseData.data.timestamp || timestamp;
+        } else if (responseData.message) {
+          message = responseData.message;
+          timestamp = responseData.timestamp || timestamp;
+        } else if (typeof responseData === 'string') {
+          message = responseData;
+        } else {
+          message = 'Không thể xử lý phản hồi từ AI Server';
+          console.warn('[ChatService] Unexpected response structure:', responseData);
+        }
+      } else {
+        message = 'Không nhận được phản hồi từ AI Server';
+      }
+
       return {
-        message: response.data.message || response.data.response,
-        timestamp: response.data.timestamp || new Date().toISOString()
+        message,
+        timestamp
       };
     } catch (error) {
       // Log lỗi và response (nếu có) để dễ debug
@@ -67,14 +133,45 @@ class ChatService {
       // eslint-disable-next-line no-console
       if ((error as any)?.response) console.error('[ChatService] AI Error Response ✖', (error as any).response?.data);
       
-      // Nếu không có response từ server (mất kết nối / server không chạy), ném lỗi đặc thù
-      // để UI có thể hiển thị thông báo "Không thể kết nối đến server"
-      if ((error as any)?.isAxiosError && !(error as any)?.response) {
-        throw new Error('AI_SERVER_UNREACHABLE');
+      // Kiểm tra loại lỗi để xử lý phù hợp
+      const axiosError = error as any;
+      
+      if (axiosError?.isAxiosError) {
+        if (!axiosError?.response) {
+          // Không có response - server không chạy hoặc network error
+          console.warn('[ChatService] AI Server unreachable, using fallback response');
+          return {
+            message: this.getFallbackResponse(userMessage),
+            timestamp: new Date().toISOString()
+          };
+        } else {
+          // Có response nhưng status code lỗi
+          const status = axiosError.response?.status;
+          const errorData = axiosError.response?.data;
+          console.error(`[ChatService] AI Server error ${status}:`, errorData);
+          
+          if (status === 404) {
+            return {
+              message: 'AI Server endpoint không tồn tại. Vui lòng kiểm tra cấu hình.',
+              timestamp: new Date().toISOString()
+            };
+          } else if (status >= 500) {
+            return {
+              message: 'AI Server đang gặp sự cố. Vui lòng thử lại sau.',
+              timestamp: new Date().toISOString()
+            };
+          } else {
+            return {
+              message: this.getFallbackResponse(userMessage),
+              timestamp: new Date().toISOString()
+            };
+          }
+        }
       }
-      // Fallback response if AI server is not available
+      
+      // Lỗi khác - sử dụng fallback
       return {
-        message: this.getFallbackResponse(message),
+        message: this.getFallbackResponse(userMessage),
         timestamp: new Date().toISOString()
       };
     }
@@ -112,8 +209,15 @@ class ChatService {
 
   async getChatHistory(): Promise<ChatMessage[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/api/v1/AiServer/history`);
-      return response.data;
+      let response;
+      
+      if (this.useLegacyAPI) {
+        response = await callLegacyChatHistory();
+      } else {
+        response = await callGetChatHistory(this.chatboxId);
+      }
+      
+      return response.data || response.data || [];
     } catch (error) {
       console.error('Error fetching chat history:', error);
       return [];
@@ -122,11 +226,32 @@ class ChatService {
 
   async clearChatHistory(): Promise<void> {
     try {
-      await axios.delete(`${this.baseURL}/api/v1/AiServer/history`);
+      if (this.useLegacyAPI) {
+        await callLegacyClearHistory();
+      } else {
+        await callClearChatHistory(this.chatboxId);
+      }
     } catch (error) {
       console.error('Error clearing chat history:', error);
     }
   }
+
+  // Method to switch chatbox
+  setChatboxId(chatboxId: string): void {
+    this.chatboxId = chatboxId;
+  }
+
+  // Method to toggle between new and legacy API
+  setUseLegacyAPI(useLegacy: boolean): void {
+    this.useLegacyAPI = useLegacy;
+  }
+
+  // Get current chatbox ID
+  getChatboxId(): string {
+    return this.chatboxId;
+  }
 }
 
-export default new ChatService();
+// Export default instance with default chatbox
+// Thay đổi useLegacyAPI thành true nếu API mới không hoạt động
+export default new ChatService('default', true);
